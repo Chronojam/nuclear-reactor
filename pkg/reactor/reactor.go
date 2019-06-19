@@ -1,6 +1,7 @@
 package reactor
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/chronojam/nuclear-reactor/pkg/fuelrod"
@@ -24,31 +25,35 @@ func (r *Reactor) StepUpdate() {
 	additionalReactorEnergy := 0.0
 	updateNeutrons := 0.0
 	fissionHits := 0
-	for _, rod := range r.reactorMatrix {
-		// Subcritical, fission reactions are dropping
-		if r.EffectiveNeutronMultiplicationFactor < 1.0 {
-			if rand.Float64() > r.EffectiveNeutronMultiplicationFactor {
-				// No fission reaction
-				continue
-			}
-		}
-		// Critical, fission reactions are not gains or declining
-		fissionHits += 1
-		a, u := rod.Fuel.DoFission()
-		additionalReactorEnergy += a
-		updateNeutrons += u
 
-		// SuperCritical, fission reactions are increasing
-		if r.EffectiveNeutronMultiplicationFactor > 1 {
-			// maths is hard, so ive simplified this bit
-			if rand.Float64() < 2-r.EffectiveNeutronMultiplicationFactor {
-				// oh dear
+	// RELATIVE_INFINITY
+	if r.EffectiveNeutronMultiplicationFactor >= 1000000.0 {
+		fmt.Printf("3.5 Roentgens, not great but not terrible")
+		return
+	}
+
+	for _, rod := range r.reactorMatrix {
+		count := 0
+		enr := r.EffectiveNeutronMultiplicationFactor
+		for enr > 0.0 {
+			enr -= rand.Float64()
+
+			if enr > 0 {
+				fissionHits++
 				a, u := rod.Fuel.DoFission()
 				additionalReactorEnergy += a
 				updateNeutrons += u
 			}
+			count++
 		}
+		fmt.Printf("Hit count: %v\n", count)
 	}
+
+	fmt.Printf("FISSION HITS %v\n", fissionHits)
+
+	fmt.Printf("FISSION HITS %v\n", updateNeutrons)
+	fmt.Printf("FISSION HITS %v\n", StepCoefficent)
+	fmt.Printf("FISSION HITS %v\n", fissionHits)
 
 	r.EffectiveNeutronMultiplicationFactor = (updateNeutrons * StepCoefficent / r.lastUpdateNeutrons * StepCoefficent)
 	r.lastUpdateNeutrons = updateNeutrons

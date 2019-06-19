@@ -1,7 +1,6 @@
 package reactor
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -15,10 +14,10 @@ func TestReactor(t *testing.T) {
 	// total reactor mass ~87000KG
 	rand.Seed(time.Now().UnixNano())
 	rods := []*fuelrod.FuelRod{}
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 10; i++ {
 		rods = append(rods, fuelrod.New(&uranium235.Uranium235Oxide{
 			Mass:    1500,
-			Quality: 2,
+			Quality: 3,
 		}))
 	}
 	r := &Reactor{
@@ -26,8 +25,8 @@ func TestReactor(t *testing.T) {
 		EffectiveNeutronMultiplicationFactor: 1.0,
 	}
 
-	for i := 0; i < 100; i++ {
-		fmt.Printf("%v\n", r.EffectiveNeutronMultiplicationFactor)
+	for i := 0; i < 2; i++ {
+		//fmt.Printf("%v\n", r.EffectiveNeutronMultiplicationFactor)
 		r.StepUpdate()
 	}
 }
