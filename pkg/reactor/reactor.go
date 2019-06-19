@@ -1,10 +1,15 @@
 package reactor
 
 import (
-	"fmt"
 	"math/rand"
 
-	"github.com/chronojam/nuclear-reactor-discord/pkg/fuelrod"
+	"github.com/chronojam/nuclear-reactor/pkg/fuelrod"
+)
+
+const (
+	// Exists because StepUpdate() isnt fast enough to run lots per second
+	// So we boost the results here by a %
+	StepCoefficent = 1.3
 )
 
 type Reactor struct {
@@ -21,7 +26,7 @@ func (r *Reactor) StepUpdate() {
 	fissionHits := 0
 	for _, rod := range r.reactorMatrix {
 		// Subcritical, fission reactions are dropping
-		if r.EffectiveNeutronMultiplicationFactor < 1 {
+		if r.EffectiveNeutronMultiplicationFactor < 1.0 {
 			if rand.Float64() > r.EffectiveNeutronMultiplicationFactor {
 				// No fission reaction
 				continue
@@ -44,11 +49,8 @@ func (r *Reactor) StepUpdate() {
 			}
 		}
 	}
-	fmt.Printf("fission reactions: %v\n", fissionHits)
-	fmt.Printf("k: %v\n", r.EffectiveNeutronMultiplicationFactor)
-	fmt.Printf("%v: %v\n", updateNeutrons, r.lastUpdateNeutrons)
-	fmt.Printf("======================================\n")
-	r.EffectiveNeutronMultiplicationFactor = (updateNeutrons / r.lastUpdateNeutrons) / 18
+
+	r.EffectiveNeutronMultiplicationFactor = (updateNeutrons * StepCoefficent / r.lastUpdateNeutrons * StepCoefficent)
 	r.lastUpdateNeutrons = updateNeutrons
 	r.currentReactorEnergy = r.currentReactorEnergy + additionalReactorEnergy
 }
