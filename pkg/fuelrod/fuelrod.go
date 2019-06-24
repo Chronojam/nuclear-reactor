@@ -1,14 +1,22 @@
 package fuelrod
 
+import (
+	"github.com/chronojam/nuclear-reactor/pkg/material"
+)
+
 type FuelRod struct {
 	// Type Indicates what this fuel rod is made of.
-	Fuel FuelType
+	m material.FissileMaterial
 }
 
 // New creates a new fuel rod for usage.
-func New(fuel FuelType) *FuelRod {
+func New(m material.FissileMaterial) *FuelRod {
 	rod := &FuelRod{
-		Fuel: fuel,
+		m: m,
 	}
 	return rod
+}
+
+func (f *FuelRod) Operate() (int64, int64) {
+	return f.m.DoFission()
 }

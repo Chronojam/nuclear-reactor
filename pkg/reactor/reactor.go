@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/chronojam/nuclear-reactor/pkg/controlrod"
 	"github.com/chronojam/nuclear-reactor/pkg/fuelrod"
 )
 
@@ -14,48 +15,50 @@ const (
 )
 
 type Reactor struct {
-	reactorMatrix                        []*fuelrod.FuelRod
-	currentReactorEnergy                 float64
-	EffectiveNeutronMultiplicationFactor float64
+	fuelRods                             []*fuelrod.FuelRod
+	controlRods                          []*controlrod.ControlRod
+	currentReactorEnergy                 int64
+	EffectiveNeutronMultiplicationFactor int64
+}
 
-	lastUpdateNeutrons float64
+func New(fuelRods []*fuelrod.FuelRod, controlRods []*controlrod.ControlRod) *Reactor {
+	return &Reactor{
+		EffectiveNeutronMultiplicationFactor: 1.0,
+		fuelRods:                             fuelRods,
+		controlRods:                          controlRods,
+	}
 }
 
 func (r *Reactor) StepUpdate() {
 	additionalReactorEnergy := 0.0
 	updateNeutrons := 0.0
-	fissionHits := 0
 
-	// RELATIVE_INFINITY
-	if r.EffectiveNeutronMultiplicationFactor >= 1000000.0 {
-		fmt.Printf("3.5 Roentgens, not great but not terrible")
-		return
-	}
-
-	for _, rod := range r.reactorMatrix {
+	for _, rod := range r.fuelRods {
 		count := 0
+		// 1.146
 		enr := r.EffectiveNeutronMultiplicationFactor
 		for enr > 0.0 {
-			enr -= rand.Float64()
-
-			if enr > 0 {
-				fissionHits++
-				a, u := rod.Fuel.DoFission()
-				additionalReactorEnergy += a
-				updateNeutrons += u
-			}
+			a, u := rod.Operate()
+			additionalReactorEnergy += a
+			updateNeutrons += u
 			count++
+			enr -= rand.Float64()
 		}
-		fmt.Printf("Hit count: %v\n", count)
 	}
 
-	fmt.Printf("FISSION HITS %v\n", fissionHits)
+	numNeutronsAbsorbed := 0.0
+	for _, rod := range r.controlRods {
+		numNeutronsAbsorbed += rod.Operate(updateNeutrons)
+	}
+	updateNeutrons -= numNeutronsAbsorbed
+	if updateNeutrons > numNeutronsAbsorbed {
+		fmt.Printf("Reaction is increasing next iteration \n")
+	} else {
+		fmt.Printf("Reaction is decreasing next iteration \n")
+	}
 
-	fmt.Printf("FISSION HITS %v\n", updateNeutrons)
-	fmt.Printf("FISSION HITS %v\n", StepCoefficent)
-	fmt.Printf("FISSION HITS %v\n", fissionHits)
-
-	r.EffectiveNeutronMultiplicationFactor = (updateNeutrons * StepCoefficent / r.lastUpdateNeutrons * StepCoefficent)
-	r.lastUpdateNeutrons = updateNeutrons
+	//fmt.Printf("%v: %v\n", updateNeutrons, r.lastUpdateNeutrons)
+	r.EffectiveNeutronMultiplicationFactor = (updateNeutrons / numNeutronsAbsorbed)
 	r.currentReactorEnergy = r.currentReactorEnergy + additionalReactorEnergy
+	//fmt.Printf("Reactor Energy: %vJ\n", r.currentReactorEnergy)
 }

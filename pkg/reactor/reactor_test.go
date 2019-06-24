@@ -5,42 +5,52 @@ import (
 	"testing"
 	"time"
 
+	"github.com/chronojam/nuclear-reactor/pkg/controlrod"
 	"github.com/chronojam/nuclear-reactor/pkg/fuelrod"
-	"github.com/chronojam/nuclear-reactor/pkg/fuelrod/uranium235"
+	"github.com/chronojam/nuclear-reactor/pkg/material/boron"
+	"github.com/chronojam/nuclear-reactor/pkg/material/uranium235"
 )
 
 func TestReactor(t *testing.T) {
 	// 57000 fuel rods, each with ~ 1.5kg @ 3% u235
 	// total reactor mass ~87000KG
 	rand.Seed(time.Now().UnixNano())
-	rods := []*fuelrod.FuelRod{}
+	fuelRods := []*fuelrod.FuelRod{}
 	for i := 0; i < 10; i++ {
-		rods = append(rods, fuelrod.New(&uranium235.Uranium235Oxide{
-			Mass:    1500,
-			Quality: 3,
-		}))
+		fuelRods = append(fuelRods, fuelrod.New(
+			uranium235.New(1500, 3)),
+		)
 	}
-	r := &Reactor{
-		reactorMatrix:                        rods,
-		EffectiveNeutronMultiplicationFactor: 1.0,
+	controlRods := []*controlrod.ControlRod{}
+	for i := 0; i < 5; i++ {
+		controlRods = append(controlRods, controlrod.New(
+			boron.New(1500, 100),
+		))
 	}
+	r := New(
+		fuelRods,
+		controlRods,
+	)
 
-	for i := 0; i < 2; i++ {
-		//fmt.Printf("%v\n", r.EffectiveNeutronMultiplicationFactor)
+	for i := 0; i < 30; i++ {
 		r.StepUpdate()
 	}
+
 }
 
 func BenchmarkStepUpdate(b *testing.B) {
-	rods := []*fuelrod.FuelRod{}
+	fuelRods := []*fuelrod.FuelRod{}
 	for i := 0; i < 1; i++ {
-		rods = append(rods, fuelrod.New(&uranium235.Uranium235Oxide{
-			Mass:    1500,
-			Quality: 3,
-		}))
+		fuelRods = append(fuelRods, fuelrod.New(uranium235.New(1500, 3)))
 	}
+	controlRods := []*controlrod.ControlRod{}
+	for i := 0; i < 1; i++ {
+		controlRods = append(controlRods, controlrod.New(boron.New(1500, 3)))
+	}
+
 	r := &Reactor{
-		reactorMatrix:                        rods,
+		fuelRods:                             fuelRods,
+		controlRods:                          controlRods,
 		EffectiveNeutronMultiplicationFactor: 1.0,
 	}
 	for i := 0; i < b.N; i++ {
