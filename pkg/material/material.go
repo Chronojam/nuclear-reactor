@@ -1,33 +1,40 @@
 package material
 
 const (
-	AvogadrosNumber int64 = 6.022e10 * 23
-	JoulesPerMeV          = 1.60218e-13
+	AvogadrosNumber = 6.022e10 * 23
+	JoulesPerMeV    = 1.60218e-13
+	MevPerJoule     = 6241506479963
 )
 
 type Material interface {
 	Name() string
-	Mass() int64
-	Quality() int64
+	Mass() int
+	Quality() float64
 }
 
 type FissileMaterial interface {
 	Material
-	DoFission() (int64, int64)
+	DoFission() (int, int)
 }
 
 type ControlMaterial interface {
 	Material
-	AbsorbNeutrons(current int64) int64
+	AbsorbNeutrons() int
 }
 
-func GetAtomicCount(m Material) int64 {
-	return (m.Mass() * (m.Quality() / 100)) * AvogadrosNumber
+func GetAtomicCount(m Material) int {
+	percentQuality := m.Quality() / 100.0
+	floatingCount := float64(m.Mass()) * percentQuality * AvogadrosNumber
+	return int(floatingCount)
 }
 
 // After a reaction, what should we set our new quality too?
-func QualityAfterReaction(m Material, atomsLostPerReaction int64) int64 {
-	return (GetAtomicCount(m) - atomsLostPerReaction) /
+func QualityAfterReaction(m Material, atomsLostPerReaction int) float64 {
+	r := float64((GetAtomicCount(m) - atomsLostPerReaction)) /
 		AvogadrosNumber /
-		m.Mass() * 100.0
+		float64(m.Mass()) * 100.0
+
+	//fmt.Printf("Quality Remaining: %v\n ", r)
+
+	return r
 }

@@ -20,11 +20,11 @@ const (
 )
 
 type Uranium235Oxide struct {
-	mass    int64
-	quality int64
+	mass    int
+	quality float64
 }
 
-func New(mass, quality int64) *Uranium235Oxide {
+func New(mass int, quality float64) *Uranium235Oxide {
 	return &Uranium235Oxide{
 		mass:    mass,
 		quality: quality,
@@ -35,20 +35,23 @@ func (u *Uranium235Oxide) Name() string {
 	return "Uranium235Oxide"
 }
 
-func (u *Uranium235Oxide) Mass() int64 {
+func (u *Uranium235Oxide) Mass() int {
 	return u.mass
 }
 
-func (u *Uranium235Oxide) Quality() int64 {
+func (u *Uranium235Oxide) Quality() float64 {
 	return u.quality
 }
 
+//1 joule is equal to 6241506479963.2 MeV.
 // DoFission, performs a fission, then returns the thermal energy it produced
 // and the number of neutrons its released into the system
-func (u *Uranium235Oxide) DoFission() (int64, int64) {
+func (u *Uranium235Oxide) DoFission() (int, int) {
 	u235AtomicQuantity := material.GetAtomicCount(u)
 	energyPerFissionJ := EnergyProducedPerFission * material.JoulesPerMeV
 	u.quality = material.QualityAfterReaction(u, ApproximateNoAtomsLostAfterEachFission)
-
-	return int64(float64(u235AtomicQuantity) * energyPerFissionJ), NumNeutronsPerFission * u235AtomicQuantity
+	if NumNeutronsPerFission*u235AtomicQuantity <= 0 {
+		panic("u235 <= 0")
+	}
+	return u235AtomicQuantity * int(energyPerFissionJ), NumNeutronsPerFission * u235AtomicQuantity
 }

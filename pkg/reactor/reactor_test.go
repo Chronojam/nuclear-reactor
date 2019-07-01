@@ -22,7 +22,7 @@ func TestReactor(t *testing.T) {
 		)
 	}
 	controlRods := []*controlrod.ControlRod{}
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 1; i++ {
 		controlRods = append(controlRods, controlrod.New(
 			boron.New(1500, 100),
 		))
@@ -32,7 +32,7 @@ func TestReactor(t *testing.T) {
 		controlRods,
 	)
 
-	for i := 0; i < 30; i++ {
+	for i := 0; i < 7; i++ {
 		r.StepUpdate()
 	}
 

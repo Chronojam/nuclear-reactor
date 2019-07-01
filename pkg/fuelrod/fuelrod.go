@@ -17,6 +17,6 @@ func New(m material.FissileMaterial) *FuelRod {
 	return rod
 }
 
-func (f *FuelRod) Operate() (int64, int64) {
+func (f *FuelRod) Operate() (int, int) {
 	return f.m.DoFission()
 }

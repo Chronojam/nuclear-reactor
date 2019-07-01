@@ -16,6 +16,6 @@ func New(m material.ControlMaterial) *ControlRod {
 	return rod
 }
 
-func (c *ControlRod) Operate(f int64) int64 {
-	return c.m.AbsorbNeutrons(f)
+func (c *ControlRod) Operate() int {
+	return c.m.AbsorbNeutrons()
 }
